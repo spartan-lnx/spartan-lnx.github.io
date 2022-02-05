@@ -1,13 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="../p5.min.js"></script>
-    <script src="sketch.js"></script>   
+    <script src="sketch.js"></script>
+    <link rel="stylesheet" href="style.css">
     <title>Tarea 2 - Daniel Orozco</title>
 </head>
+
 <body>
+    <h1>Tarea 2 Robotica Movil - Espacio de Configuraciones</h1>
+    <h2>Alumno: Daniel Uriel Orozco Lomeli</h2>
+    <hr>
+    <h4>Indicaciones:</h4>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        1. Se puede hacer clic sobre la pelota azul y arrastarla para cambiar su posicion.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        2. Los primeros 2 sliders a la derecha de calcular es para variar el angulo alpha y beta del brazo respectivamente.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        3. Los segundos 2 sliders se usan para variar la longitud del segmento L1 y L2.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        4. El ultimo slider es para variar el diametro de la pelota
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        5. Al posicionar la pelota segun se desee y al especificar la longitud de L1 y L2 se puede hacer clic en calcular. Al hacer clic en calcular se
+         mostrara el Espacio de configuraciones (se recomienda hacer zoom out a la pagina para visualizar mejor el mapa generado). Los recuadros negros significa que si
+          hubo una colision y los recuadros negros significa que no.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        6. Mover manualmente los angulos solo sirven para la posicion de la punta del brazo y si se encuentra en contacto con la pelota
+         esta cambiara a color negro (no es del todo presiso visualmente por los desfases que agrega las articulaciones amarillas pero no afecta al calculo del espacio de configuraciones).
+    </p>
+    <div id="output"></div>
+    <br>
+    <hr>
+    <div id="sketch-holder"></div>    
 </body>
+
 </html>
