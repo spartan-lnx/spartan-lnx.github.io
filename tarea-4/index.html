@@ -8,12 +8,91 @@
     <!-- <script src="../p5.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.min.js" integrity="sha512-NxocnqsXP3zm0Xb42zqVMvjQIktKEpTIbCXXyhBPxqGZHqhcOXHs4pXI/GoZ8lE+2NJONRifuBpi9DxC58L0Lw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="sketch.js"></script>
+    <script src="grafos.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
     <!-- <link rel="stylesheet" href="style.css"> -->
     <title>Tarea 2 - Daniel Orozco</title>
 </head>
 
 <body>
     <div id="sketch-holder"></div>    
+    <div id="myPlotTodos" style="width:100%;max-width:700px"></div>
+    <div id="myPlotLibres" style="width:100%;max-width:700px"></div>
+    
 </body>
+
+<script>
+    // const alphas = JSON.parse(localStorage.getItem('Alphas'));
+    // const betas = JSON.parse(localStorage.getItem('Betas'));
+
+    // console.log('todos desde el mas alla alphas: ',alphas);
+    // console.log('todos desde el mas alla betas: ',betas);
+
+    // const alphasBuenos = JSON.parse(localStorage.getItem('AlphasBuenos'));
+    // const betasBuenos = JSON.parse(localStorage.getItem('BetasBuenos'));
+
+    // console.log('todos desde el mas alla buenos alphas: ',alphasBuenos);
+    // console.log('todos desde el mas alla buenos betas: ',betasBuenos);
+
+    // const alphasMalos = JSON.parse(localStorage.getItem('AlphasMalos'));
+    // const betasMalos = JSON.parse(localStorage.getItem('BetasMalos'));
+
+
+
+    // var databueno = {
+    //   x:alphasBuenos,
+    //   y:betasBuenos,
+    //   name:'libre',
+    //   mode:"markers",
+    //   marker:{
+    //    size: 8,
+    //    color: 'blue'
+    //   },
+    // };
+
+    // var data = [{
+    //   x:alphasBuenos,
+    //   y:betasBuenos,
+    //   name:'libre',
+    //   mode:"markers",
+    //   marker:{
+    //    size: 8,
+    //    color: 'blue'
+    //   },
+    // }];
+    
+    // // Define Layout
+    // var layout = {
+    //   xaxis: {range: [0, 180], title: "Alpha"},
+    //   yaxis: {range: [0, 360], title: "Beta"}, 
+    //   title: "Espacio de configuraciones muestreo (Libres)",
+    // };
+    
+    // // Display using Plotly
+    // Plotly.newPlot("myPlotLibres", data, layout);
+
+    // var datamalo = {
+    //   x:alphasMalos,
+    //   y:betasMalos,
+    //   name:'colision',
+    //   mode:"markers",
+    //   marker:{
+    //    size: 8,
+    //    color: 'red'
+    //   }
+    // };
+
+    // var plotData = [databueno,datamalo];
+
+    // var layout = {
+    //   xaxis: {range: [0, 180], title: "Alpha"},
+    //   yaxis: {range: [0, 360], title: "Beta"},  
+    //   title: "Espacio de configuraciones muestreo"
+    // };
+    
+    // // Display using Plotly
+    // Plotly.newPlot("myPlotTodos", plotData, layout);
+
+    </script>
 
 </html>

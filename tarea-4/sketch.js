@@ -1,3 +1,30 @@
+class Nodo {
+    constructor(valor, alpha, beta) {
+        this.valor = valor; //identificador
+        this.alpha = alpha;
+        this.beta = beta;
+        this.distancia = 0;
+        this.adyacentes = [];
+    }
+
+    addAdyacente(nodo, distancia) {
+        this.adyacentes.push({ 'nodo': nodo, 'distancia': distancia });
+    }
+
+    // removeAdyacente(nodo){
+    //     let remover = this.adyacentes.find(n => n.valor == nodo.valor);
+    //     this.adyacentes.pop()
+    // }
+
+    printAdyacentes() {
+        console.log(this.adyacentes);
+    }
+
+    printNodo() {
+        console.log(this.valor);
+    }
+}
+
 class Brazo {
     constructor(l1 = 200, l2 = 200, alphai = 0, betaj = 0, color = [255, 51, 78]) {
         this.x = 0;
@@ -14,7 +41,7 @@ class Brazo {
         return (cos(this.alphai) * this.l1);
     }
 
-    getP2Y(){
+    getP2Y() {
         return (sin(this.alphai) * this.l1);
     }
 
@@ -24,7 +51,7 @@ class Brazo {
 
     getP3Y() {
         return (this.l1 * sin(this.alphai) + this.l2 * sin(this.alphai + this.betaj));
-        
+
     }
 
     dibujarBrazo2() {
@@ -82,8 +109,8 @@ class Circulo {
         this.radio = radio;
     }
 
-    dibujarCirculo(r,g,b,a) {
-        fill(r,g,b,a);
+    dibujarCirculo(r, g, b, a) {
+        fill(r, g, b, a);
         noStroke();
         circle(this.x, -this.y, this.radio);
     }
@@ -100,97 +127,230 @@ let height = 800;
 let maxAlpha = 180;
 let maxBeta = 360;
 
+let puntos = [];
+let puntoschidos = [];
+let puntosSize = 30;
+let k = 3;
+
 function setup() {
     createCanvas(width, height);
     angleMode(DEGREES);
-    
-    brazo = new Brazo(l1 = 200, l2 = 100, alphai = 0, betaj = 0, color = [255, 51, 78]);
+
+    brazo = new Brazo(l1 = 200, l2 = 100, alphai = 120, betaj = 0, color = [255, 51, 78]);
     circulo1 = new Circulo(0, 100, 90);
-    circulo2 = new Circulo(-200, 300, 60);
+    circulo2 = new Circulo(-200, 300, 100);
+
+    generarPuntos();
+
+    let alphas = [];
+    let betas = [];
+
+    let nodosbuenos = [];
+
+    let alphasbuenos = [];
+    let betasbuenos = [];
+
+    let alphasmalos = [];
+    let betasmalos = [];
+
+    for (let i = 0; i < puntosSize; i++) {
+        if (!evaluateNode(puntos[i])) {
+            nodosbuenos.push(puntos[i]);
+            alphasbuenos.push(puntos[i]['alpha']);
+            betasbuenos.push(puntos[i]['beta']);
+        }
+        else {
+            alphasmalos.push(puntos[i]['alpha']);
+            betasmalos.push(puntos[i]['beta']);
+        }
+        alphas.push(puntos[i]['alpha']);
+        betas.push(puntos[i]['beta']);
+    }
+
+
+    var databueno = {
+        x: alphasbuenos,
+        y: betasbuenos,
+        name: 'libre',
+        mode: "markers",
+        marker: {
+            size: 8,
+            color: 'blue'
+        },
+    };
+
+    var data = [{
+        x: alphasbuenos,
+        y: betasbuenos,
+        name: 'libre',
+        mode: "markers",
+        marker: {
+            size: 8,
+            color: 'blue'
+        },
+    }];
+
+    // Define Layout
+    var layout = {
+        xaxis: { range: [0, 180], title: "Alpha" },
+        yaxis: { range: [0, 360], title: "Beta" },
+        title: "Espacio de configuraciones muestreo (Libres)",
+    };
+
+    // Display using Plotly
+    Plotly.newPlot("myPlotLibres", data, layout);
+
+    var datamalo = {
+        x: alphasmalos,
+        y: betasmalos,
+        name: 'colision',
+        mode: "markers",
+        marker: {
+            size: 8,
+            color: 'red'
+        }
+    };
+
+    var plotData = [databueno, datamalo];
+
+    var layout = {
+        xaxis: { range: [0, 180], title: "Alpha" },
+        yaxis: { range: [0, 360], title: "Beta" },
+        title: "Espacio de configuraciones muestreo"
+    };
+
+    // Display using Plotly
+    Plotly.newPlot("myPlotTodos", plotData, layout);
+
+    let grafo = [];
+
+    nodosbuenos.forEach(nodo => {
+        let vecinos = kvecinos(nodo, nodosbuenos, k);
+        n = new Nodo(nodo['nodo'],nodo['alpha'],nodo['beta']);
+        
+        for (let i = 0; i < vecinos.length; i++) {
+            n.addAdyacente(vecinos[i].nodo,vecinos[i].distancia);    
+        }
+
+        grafo.push(n);
+    });
+
+    console.log(grafo);
 }
+
 
 
 function draw() {
     background(200);
-    translate(width/2,height);
+    translate(width / 2, height);
 
-    hit = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo1.x, circulo1.y, circulo1.radio) 
+    hit = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo1.x, circulo1.y, circulo1.radio)
         || lineCircle(brazo.getP2X(), brazo.getP2Y(), brazo.getP3X(), brazo.getP3Y(), circulo1.x, circulo1.y, circulo1.radio);
 
-    
-    hit2 = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo2.x, circulo2.y, circulo2.radio) 
-    || lineCircle(brazo.getP2X(), brazo.getP2Y(), brazo.getP3X(), brazo.getP3Y(), circulo2.x, circulo2.y, circulo2.radio);
 
-    
+    hit2 = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo2.x, circulo2.y, circulo2.radio)
+        || lineCircle(brazo.getP2X(), brazo.getP2Y(), brazo.getP3X(), brazo.getP3Y(), circulo2.x, circulo2.y, circulo2.radio);
+
+
     push();
     brazo.dibujarBrazo();
     pop();
 
     // draw the circle
-    if (hit){
-        circulo1.dibujarCirculo(255,150,0, 150);
+    if (hit) {
+        circulo1.dibujarCirculo(255, 150, 0, 150);
     }
-    else{
-        circulo1.dibujarCirculo(0,150,255, 150);
+    else {
+        circulo1.dibujarCirculo(0, 150, 255, 150);
     }
-    
+
     // draw the circle 2
-    if (hit2){
-        circulo2.dibujarCirculo(255,150,0, 150);
+    if (hit2) {
+        circulo2.dibujarCirculo(255, 150, 0, 150);
     }
-    else{
-        circulo2.dibujarCirculo(0,150,255, 150);
+    else {
+        circulo2.dibujarCirculo(0, 150, 255, 150);
     }
 }
 
-
-let puntos = [];
-let puntosSize = 100;
-
-function generarPuntos(){
+function generarPuntos() {
     let alphai;
     let betaj;
 
     for (let i = 0; i < puntosSize; i++) {
-        alphai = Math.random() % maxAlpha;
-        betaj = Math.random() % maxBeta;
-
-        puntos.add()
+        alphai = Math.floor((Math.random() * maxAlpha));
+        betaj = Math.floor((Math.random() * maxBeta));
+        puntos.push({ 'nodo': i, 'alpha': alphai, 'beta': betaj });
     }
 }
 
-class Graph {
-    constructor() {
-      this.adjacencyList = {};
+function evaluateNode(node) {
+    let x2 = (cos(node['alpha']) * brazo.l1);
+
+    let y2 = (sin(node['alpha']) * brazo.l1);
+
+    let x3 = (brazo.l1 * cos(node['alpha']) + brazo.l2 * cos(node['alpha'] + node['beta']));
+
+    let y3 = (brazo.l1 * sin(node['alpha']) + brazo.l2 * sin(node['alpha'] + node['beta']));
+
+    hit = lineCircle(0, 0, x2, brazo.y2, circulo1.x, circulo1.y, circulo1.radio)
+        || lineCircle(x2, y2, x3, y3, circulo1.x, circulo1.y, circulo1.radio);
+
+
+    hit2 = lineCircle(0, 0, x2, y2, circulo2.x, circulo2.y, circulo2.radio)
+        || lineCircle(x2, y2, x3, y3, circulo2.x, circulo2.y, circulo2.radio);
+
+    return hit || hit2;
+}
+
+function kvecinos(nodo, poblacion, k) {
+    let distancias = [];
+    let vecinos = [];
+
+    for (let i = 0; i < poblacion.length; i++) {
+        distancias.push({ 'distancia': dist(nodo['alpha'], nodo['beta'], poblacion[i]['alpha'], poblacion[i]['beta']), 'nodo': poblacion[i] });
     }
-    addVertex(vertex) {
-      if (!this.adjacencyList[vertex]) {
-        this.adjacencyList[vertex] = [];
-      }
+
+    distancias.sort(function (a, b) {
+        return a.distancia - b.distancia;
+    });
+
+    let j = 0, i = 1;
+    let puntomedio, puntocuarto1, puntocuarto2, puntoctavo1, puntoctavo2, puntoctavo3, puntoctavo4;
+
+    while (j < k && i < distancias.length) {
+        puntomedio = [(nodo['alpha'] + distancias[i].nodo['alpha']) / 2, (nodo['beta'] + distancias[i].nodo['beta']) / 2];
+        puntocuarto1 = [(nodo['alpha'] + puntomedio[0]) / 2, (nodo['beta'] + puntomedio[1]) / 2];
+        puntocuarto2 = [(distancias[i].nodo['alpha'] + puntomedio[0]) / 2, (distancias[i].nodo['beta']) / 2];
+        puntoctavo1 = [(nodo['alpha'] + puntocuarto1[0]) / 2, (nodo['beta'] + puntocuarto1[1]) / 2];
+        puntoctavo2 = [(puntomedio[0] + puntocuarto1[0]) / 2, (puntomedio[0] + puntocuarto1[1]) / 2];
+        puntoctavo3 = [(puntomedio[0] + puntocuarto2[0]) / 2, (puntomedio[1] + puntocuarto2[1]) / 2];
+        puntoctavo4 = [(puntocuarto2[0] + distancias[i].nodo['alpha']) / 2, (puntocuarto2[1] + distancias[i].nodo['beta']) / 2];
+
+        if (!evaluateNode({ 'alpha': puntomedio[0], 'beta': puntomedio[1] }) &&
+            !evaluateNode({ 'alpha': puntocuarto1[0], 'beta': puntocuarto1[1] }) &&
+            !evaluateNode({ 'alpha': puntocuarto2[0], 'beta': puntocuarto2[1] }) &&
+            !evaluateNode({ 'alpha': puntoctavo1[0], 'beta': puntoctavo1[1] }) &&
+            !evaluateNode({ 'alpha': puntoctavo2[0], 'beta': puntoctavo2[1] }) &&
+            !evaluateNode({ 'alpha': puntoctavo3[0], 'beta': puntoctavo3[1] }) &&
+            !evaluateNode({ 'alpha': puntoctavo4[0], 'beta': puntoctavo4[1] })) {
+            vecinos.push({'nodo':distancias[i].nodo,'distancia':distancias[i].distancia});
+            i++;
+            j++;
+        }
+        else {
+            //console.log(`nodo ${distancias[i]} no sirve, aumentando i = ${i} a ${i+1}`);
+            i++;
+            continue;
+        }
     }
-    addEdge(source, destination) {
-      if (!this.adjacencyList[source]) {
-        this.addVertex(source);
-      }
-      if (!this.adjacencyList[destination]) {
-        this.addVertex(destination);
-      }
-      this.adjacencyList[source].push(destination);
-      this.adjacencyList[destination].push(source);
+
+    if (i >= distancias.length) {
+        console.log('nodo \'encerrado\' ')
     }
-    removeEdge(source, destination) {
-      this.adjacencyList[source] = this.adjacencyList[source].filter(vertex => vertex !== destination);
-      this.adjacencyList[destination] = this.adjacencyList[destination].filter(vertex => vertex !== source);
-    }
-    removeVertex(vertex) {
-      while (this.adjacencyList[vertex]) {
-        const adjacentVertex = this.adjacencyList[vertex].pop();
-        this.removeEdge(vertex, adjacentVertex);
-      }
-      delete this.adjacencyList[vertex];
-    }  
-  }  
-  
+    return vecinos;
+}
+
 // POINT/CIRCLE
 function pointCircle(px, py, cx, cy, r) {
 
