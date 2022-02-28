@@ -7,92 +7,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- <script src="../p5.min.js"></script> -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.min.js" integrity="sha512-NxocnqsXP3zm0Xb42zqVMvjQIktKEpTIbCXXyhBPxqGZHqhcOXHs4pXI/GoZ8lE+2NJONRifuBpi9DxC58L0Lw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="sketch.js"></script>
-    <script src="grafos.js"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/addons/p5.sound.min.js" integrity="sha512-WzkwpdWEMAY/W8WvP9KS2/VI6zkgejR4/KTxTl4qHx0utqeyVE0JY+S1DlMuxDChC7x0oXtk/ESji6a0lP/Tdg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
     <script src="https://cdn.plot.ly/plotly-2.9.0.min.js"></script>
-    <!-- <link rel="stylesheet" href="style.css"> -->
-    <title>Tarea 2 - Daniel Orozco</title>
+    <script src="sketch.js"></script>
+    <title>Tarea 4 - Daniel Orozco</title>
 </head>
 
 <body>
-    <div id="sketch-holder"></div>    
+    <h1>Tarea 4 Robotica Movil - Mapas de caminos probabilísticos</h1>
+    <h2>Alumno: Daniel Uriel Orozco Lomeli</h2>
+    <hr>
+    <h4>Indicaciones:</h4>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        1. Se puede hacer clic sobre los circulos y arrastarlos para cambiar su posicion.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        2. Los primeros 2 sliders es para variar el angulo alpha y beta del brazo respectivamente.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        3. Los segundos 2 sliders se usan para variar la longitud del segmento L1 y L2.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        4. Los utlimos 2 sliders son para variar el diametro de los circulos
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        5. Se Debe configurar la posicion de las pelotas, la longitud de los brazos y la posicion inicial y final del brazo. La posicion inicial 
+        debe ser distinta a la posicion final, y se establece ajustando los alpha - beta segun se desee y haciendo clic en 'definir pose inicial' / 'definir pose final'. 
+        La pose inicial y final se puede definir de manera aleatoria haciendo clic en 'definir aleatorio'
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        6. Al posicionar las pelotas segun se desee, al especificar la longitud de L1 y L2 y al definir una pose inicial y final se puede hacer clic en calcular. 
+        Al hacer clic en calcular se mostrara el Espacio de configuraciones con puntos aleatorios, los azules corresponden a espacio libre, los rojos a espacio en colision, el punto verde
+         la posicion inicial y el punto rojo la posicion final. Tambien comenzara la animacion de movimiento del brazo desde la posicion inicial hasta la posicion final de manera ciclada.
+    </p>
+    <p style="margin-top: 1em; margin-bottom: 1em;">
+        7. Para escoger una nueva configuracion se recomienda refrescar la pagina.
+    </p>
+    <hr>
     <div id="myPlotTodos" style="width:100%;max-width:700px"></div>
+    <hr>
     <div id="myPlotLibres" style="width:100%;max-width:700px"></div>
-    
+    <hr>
+    <div id="myDiv" style="width:100%;max-width:700px"></div>
+    <hr>
+    <div id="sketch-holder"></div>
 </body>
-
-<script>
-    // const alphas = JSON.parse(localStorage.getItem('Alphas'));
-    // const betas = JSON.parse(localStorage.getItem('Betas'));
-
-    // console.log('todos desde el mas alla alphas: ',alphas);
-    // console.log('todos desde el mas alla betas: ',betas);
-
-    // const alphasBuenos = JSON.parse(localStorage.getItem('AlphasBuenos'));
-    // const betasBuenos = JSON.parse(localStorage.getItem('BetasBuenos'));
-
-    // console.log('todos desde el mas alla buenos alphas: ',alphasBuenos);
-    // console.log('todos desde el mas alla buenos betas: ',betasBuenos);
-
-    // const alphasMalos = JSON.parse(localStorage.getItem('AlphasMalos'));
-    // const betasMalos = JSON.parse(localStorage.getItem('BetasMalos'));
-
-
-
-    // var databueno = {
-    //   x:alphasBuenos,
-    //   y:betasBuenos,
-    //   name:'libre',
-    //   mode:"markers",
-    //   marker:{
-    //    size: 8,
-    //    color: 'blue'
-    //   },
-    // };
-
-    // var data = [{
-    //   x:alphasBuenos,
-    //   y:betasBuenos,
-    //   name:'libre',
-    //   mode:"markers",
-    //   marker:{
-    //    size: 8,
-    //    color: 'blue'
-    //   },
-    // }];
-    
-    // // Define Layout
-    // var layout = {
-    //   xaxis: {range: [0, 180], title: "Alpha"},
-    //   yaxis: {range: [0, 360], title: "Beta"}, 
-    //   title: "Espacio de configuraciones muestreo (Libres)",
-    // };
-    
-    // // Display using Plotly
-    // Plotly.newPlot("myPlotLibres", data, layout);
-
-    // var datamalo = {
-    //   x:alphasMalos,
-    //   y:betasMalos,
-    //   name:'colision',
-    //   mode:"markers",
-    //   marker:{
-    //    size: 8,
-    //    color: 'red'
-    //   }
-    // };
-
-    // var plotData = [databueno,datamalo];
-
-    // var layout = {
-    //   xaxis: {range: [0, 180], title: "Alpha"},
-    //   yaxis: {range: [0, 360], title: "Beta"},  
-    //   title: "Espacio de configuraciones muestreo"
-    // };
-    
-    // // Display using Plotly
-    // Plotly.newPlot("myPlotTodos", plotData, layout);
-
-    </script>
-
 </html>

@@ -1,3 +1,148 @@
+var Graph = (function (undefined) {
+
+    var extractKeys = function (obj) {
+        var keys = [], key;
+        for (key in obj) {
+            Object.prototype.hasOwnProperty.call(obj, key) && keys.push(key);
+        }
+        return keys;
+    }
+
+    var sorter = function (a, b) {
+        return parseFloat(a) - parseFloat(b);
+    }
+
+    var findPaths = function (map, start, end, infinity) {
+        infinity = infinity || Infinity;
+
+        var costs = {},
+            open = { '0': [start] },
+            predecessors = {},
+            keys;
+
+        var addToOpen = function (cost, vertex) {
+            var key = "" + cost;
+            if (!open[key]) open[key] = [];
+            open[key].push(vertex);
+        }
+
+        costs[start] = 0;
+
+        while (open) {
+            if (!(keys = extractKeys(open)).length) break;
+
+            keys.sort(sorter);
+
+            var key = keys[0],
+                bucket = open[key],
+                node = bucket.shift(),
+                currentCost = parseFloat(key),
+                adjacentNodes = map[node] || {};
+
+            if (!bucket.length) delete open[key];
+
+            for (var vertex in adjacentNodes) {
+                if (Object.prototype.hasOwnProperty.call(adjacentNodes, vertex)) {
+                    var cost = adjacentNodes[vertex],
+                        totalCost = cost + currentCost,
+                        vertexCost = costs[vertex];
+
+                    if ((vertexCost === undefined) || (vertexCost > totalCost)) {
+                        costs[vertex] = totalCost;
+                        addToOpen(totalCost, vertex);
+                        predecessors[vertex] = node;
+                    }
+                }
+            }
+        }
+
+        if (costs[end] === undefined) {
+            return null;
+        } else {
+            return predecessors;
+        }
+
+    }
+
+    var extractShortest = function (predecessors, end) {
+        var nodes = [],
+            u = end;
+
+        while (u !== undefined) {
+            nodes.push(u);
+            u = predecessors[u];
+        }
+
+        nodes.reverse();
+        return nodes;
+    }
+
+    var findShortestPath = function (map, nodes) {
+        var start = nodes.shift(),
+            end,
+            predecessors,
+            path = [],
+            shortest;
+
+        while (nodes.length) {
+            end = nodes.shift();
+            predecessors = findPaths(map, start, end);
+
+            if (predecessors) {
+                shortest = extractShortest(predecessors, end);
+                if (nodes.length) {
+                    path.push.apply(path, shortest.slice(0, -1));
+                } else {
+                    return path.concat(shortest);
+                }
+            } else {
+                return null;
+            }
+
+            start = end;
+        }
+    }
+
+    var toArray = function (list, offset) {
+        try {
+            return Array.prototype.slice.call(list, offset);
+        } catch (e) {
+            var a = [];
+            for (var i = offset || 0, l = list.length; i < l; ++i) {
+                a.push(list[i]);
+            }
+            return a;
+        }
+    }
+
+    var Graph = function (map) {
+        this.map = map;
+    }
+
+    Graph.prototype.findShortestPath = function (start, end) {
+        if (Object.prototype.toString.call(start) === '[object Array]') {
+            return findShortestPath(this.map, start);
+        } else if (arguments.length === 2) {
+            return findShortestPath(this.map, [start, end]);
+        } else {
+            return findShortestPath(this.map, toArray(arguments));
+        }
+    }
+
+    Graph.findShortestPath = function (map, start, end) {
+        if (Object.prototype.toString.call(start) === '[object Array]') {
+            return findShortestPath(map, start);
+        } else if (arguments.length === 3) {
+            return findShortestPath(map, [start, end]);
+        } else {
+            return findShortestPath(map, toArray(arguments, 1));
+        }
+    }
+
+    return Graph;
+
+})();
+
 class Nodo {
     constructor(valor, alpha, beta) {
         this.valor = valor; //identificador
@@ -26,7 +171,7 @@ class Nodo {
 }
 
 class Brazo {
-    constructor(l1 = 200, l2 = 200, alphai = 0, betaj = 0, color = [255, 51, 78]) {
+    constructor(l1 = 200, l2 = 160, alphai = 0, betaj = 0, color = [255, 51, 78]) {
         this.x = 0;
         this.y = 0;
         this.l1 = l1;
@@ -54,6 +199,14 @@ class Brazo {
 
     }
 
+    getAlpha() {
+        return this.alphai;
+    }
+
+    getBeta() {
+        return this.betaj;
+    }
+
     dibujarBrazo2() {
         strokeWeight(8);
         stroke('red');
@@ -67,6 +220,7 @@ class Brazo {
     }
 
     dibujarBrazo() {
+        //this.dibujarBrazo2();
         //Color de borde y grosor
         stroke("black");
         strokeWeight(6);
@@ -112,7 +266,8 @@ class Circulo {
     dibujarCirculo(r, g, b, a) {
         fill(r, g, b, a);
         noStroke();
-        circle(this.x, -this.y, this.radio);
+        ellipse(this.x, -this.y, this.radio * 2, this.radio * 2);
+        //circle(this.x, this.y, this.radio);
     }
 }
 
@@ -129,21 +284,151 @@ let maxBeta = 360;
 
 let puntos = [];
 let puntoschidos = [];
-let puntosSize = 30;
-let k = 3;
+let ruta = [];
+let puntosSize = 100;
+let k = 5;
+
+let inicial;
+let final;
+
+let sliderAlpha;
+let sliderBeta;
+let sldl1;
+let sldl2;
+let sldradio;
+let sldradio2;
+let calcular;
+let setposeinicial;
+let setposefinal;
+let setrandom;
+
 
 function setup() {
-    createCanvas(width, height);
+    var canvas = createCanvas(width, height);
+    canvas.parent('sketch-holder');
     angleMode(DEGREES);
+    frameRate(10);
 
-    brazo = new Brazo(l1 = 200, l2 = 100, alphai = 120, betaj = 0, color = [255, 51, 78]);
-    circulo1 = new Circulo(0, 100, 90);
+    brazo = new Brazo();
+    circulo1 = new Circulo(200, 200, 90);
     circulo2 = new Circulo(-200, 300, 100);
+
+    sliderAlpha = createSlider(0, maxAlpha, 0, 1);
+    sliderBeta = createSlider(0, maxBeta, 0, 1);
+
+    sldl1 = createSlider(20, 300, 100, 1);
+    sldl2 = createSlider(20, 300, 60, 1);
+    sldradio = createSlider(20, 400, 80, 1);
+    sldradio2 = createSlider(20, 400, 80, 1);
+
+    calcular = createButton('Calcular');
+    calcular.mousePressed(calc);
+
+    setposeinicial = createButton('definir pose inicial');
+    setposeinicial.mousePressed(setinicial);
+
+    setposefinal = createButton('definir pose final');
+    setposefinal.mousePressed(setfinal);
+
+    setrandom = createButton('definir aleatorio');
+    setrandom.mousePressed(setposerandom);
+}
+
+let rutaindex = 0;
+
+function draw() {
+    background(200);
+    translate(width / 2, height);
+
+    //Verificar colision con circulo 1
+    hit = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo1.x, circulo1.y, circulo1.radio)
+        || lineCircle(brazo.getP2X(), brazo.getP2Y(), brazo.getP3X(), brazo.getP3Y(), circulo1.x, circulo1.y, circulo1.radio);
+
+    //Verificar colision con circulo 2
+    hit2 = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo2.x, circulo2.y, circulo2.radio)
+        || lineCircle(brazo.getP2X(), brazo.getP2Y(), brazo.getP3X(), brazo.getP3Y(), circulo2.x, circulo2.y, circulo2.radio);
+
+
+    //Acualizar valores de alpha y beta del brazo
+    brazo.alphai = sliderAlpha.value();
+    brazo.betaj = sliderBeta.value();
+
+    //Acualizar valores L1 y L2 del brazo
+    brazo.l1 = sldl1.value();
+    brazo.l2 = sldl2.value();
+
+    //Actualiza el valor del radio
+    circulo1.radio = sldradio.value();
+    circulo2.radio = sldradio2.value();
+
+    push();
+
+    //Actualiza frame a nueva posicion despues de calcular la ruta
+    if (ruta.length > 0) {
+        brazo.alphai = ruta[rutaindex][0];
+        brazo.betaj = ruta[rutaindex][1];
+        rutaindex = (rutaindex + 1) % ruta.length;
+    }
+
+
+
+    brazo.dibujarBrazo();
+    pop();
+
+    // draw the circle
+    if (hit) {
+        circulo1.dibujarCirculo(255, 150, 0, 150);
+    }
+    else {
+        circulo1.dibujarCirculo(0, 150, 255, 150);
+    }
+
+    // draw the circle 2
+    if (hit2) {
+        circulo2.dibujarCirculo(255, 150, 0, 150);
+    }
+    else {
+        circulo2.dibujarCirculo(255, 40, 0, 150);
+    }
+}
+
+
+function setinicial() {
+    inicial = { 'nodo': puntosSize, 'alpha': brazo.getAlpha(), 'beta': brazo.getBeta() };
+}
+
+function setfinal() {
+    final = { 'nodo': puntosSize + 1, 'alpha': brazo.getAlpha(), 'beta': brazo.getBeta() };
+}
+
+function setposerandom() {
+    let posinicial, posfinal;
+    while (posinicial == undefined || posfinal == undefined) {
+        let alphai = Math.floor((Math.random() * maxAlpha));
+        let betaj = Math.floor((Math.random() * maxBeta));
+
+        if (!evaluateNode({ 'alpha': alphai, 'beta': betaj })) {
+            posinicial = { 'nodo': puntos.length, 'alpha': alphai, 'beta': betaj };
+        }
+
+        alphai = Math.floor((Math.random() * maxAlpha));
+        betaj = Math.floor((Math.random() * maxBeta));
+
+        if (!evaluateNode({ 'alpha': alphai, 'beta': betaj })) {
+            posfinal = { 'nodo': puntos.length + 1, 'alpha': alphai, 'beta': betaj };
+        }
+    }
+
+    inicial = posinicial;
+    final = posfinal;
+}
+
+function calc() {
 
     generarPuntos();
 
-    let alphas = [];
-    let betas = [];
+    let posinicial;
+    let posfinal;
 
     let nodosbuenos = [];
 
@@ -153,7 +438,52 @@ function setup() {
     let alphasmalos = [];
     let betasmalos = [];
 
-    for (let i = 0; i < puntosSize; i++) {
+    let grafo = [];
+    var map2 = {};
+    ruta = [];
+    rutaindex = 0;
+
+    if (final == undefined || inicial == undefined) {
+        alert('Falta definir pose inicial o final');
+        return -1;
+    }
+
+    if (final.alpha == inicial.alpha && final.beta == inicial.beta) {
+        alert('Pose inicial y pose final son iguales');
+        return -2;
+    }
+
+    posfinal = final;
+    posinicial = inicial;
+
+    // while (posinicial == undefined || posfinal == undefined) {
+    //     let alphai = Math.floor((Math.random() * maxAlpha));
+    //     let betaj = Math.floor((Math.random() * maxBeta));
+
+    //     if (!evaluateNode({ 'alpha': alphai, 'beta': betaj })) {
+    //         posinicial = { 'nodo': puntos.length, 'alpha': alphai, 'beta': betaj };
+    //     }
+
+    //     alphai = Math.floor((Math.random() * maxAlpha));
+    //     betaj = Math.floor((Math.random() * maxBeta));
+
+    //     if (!evaluateNode({ 'alpha': alphai, 'beta': betaj })) {
+    //         posfinal = { 'nodo': puntos.length + 1, 'alpha': alphai, 'beta': betaj };
+    //     }
+    // }
+
+
+
+    //console.log(posinicial,posfinal);
+
+    puntos.push(posinicial);
+    puntos.push(posfinal);
+
+    //console.log(puntos);
+
+
+
+    for (let i = 0; i < puntosSize + 2; i++) {
         if (!evaluateNode(puntos[i])) {
             nodosbuenos.push(puntos[i]);
             alphasbuenos.push(puntos[i]['alpha']);
@@ -163,10 +493,88 @@ function setup() {
             alphasmalos.push(puntos[i]['alpha']);
             betasmalos.push(puntos[i]['beta']);
         }
-        alphas.push(puntos[i]['alpha']);
-        betas.push(puntos[i]['beta']);
     }
 
+    graficar(alphasbuenos, betasbuenos, alphasmalos, betasmalos, posinicial, posfinal);
+
+
+
+    nodosbuenos.forEach(nodo => {
+        let vecinos = kvecinos(nodo, nodosbuenos, k);
+        n = new Nodo(nodo['nodo'], nodo['alpha'], nodo['beta']);
+
+        for (let i = 0; i < vecinos.length; i++) {
+            n.addAdyacente(vecinos[i].nodo, vecinos[i].distancia);
+        }
+
+        grafo.push(n);
+    });
+    //graficarGrafo(alphasbuenos, betasbuenos, grafo);
+
+    grafo.forEach(nodo => {
+        let adj = {};
+        nodo.adyacentes.forEach(n => {
+            adj[n.nodo.nodo] = n.distancia;
+        });
+        map2[nodo.valor] = adj;
+    });
+
+    graph2 = new Graph(map2);
+
+    //console.log(grafo[0].valor,grafo[3].valor);
+    console.log(grafo);
+    console.log('pose inicial:', posinicial, posinicial.nodo);
+    console.log('pose final: ', posfinal, posfinal.nodo);
+    //console.log(`fuente: ${puntos.valor}, destino ${grafo[3].valor}`)
+    // console.log(graph2.findShortestPath(posinicial.nodo.toString(),posfinal.nodo.toString()));
+    let solucion = graph2.findShortestPath(posinicial.nodo.toString(), posfinal.nodo.toString());
+    console.log(solucion);
+
+    if (solucion) {
+        solucion.forEach(pose => {
+            let nodo = grafo.find(n => {
+                return n['valor'] == parseInt(pose);
+            });
+            //console.log(nodo['alpha'],nodo['beta']);
+            ruta.push([nodo['alpha'], nodo['beta']]);
+        });
+    }
+    else {
+        alert('No fue posible encontrar trayectoria valida entre pose inicial a pose final');
+    }
+    //console.log(grafo);
+}
+
+
+/**
+ * Grafica los puntos generados aleatoriamente en el espacio de configuraciones
+ * Los puntos azules corresponden a espacio libre
+ * Los puntos rojos corresponden a colisiones, por lo que estos son descartados para encontrar la ruta de la pose inicial a la final
+ */
+function graficar(alphasbuenos, betasbuenos, alphasmalos, betasmalos, ini, fin) {
+
+
+    var inicial = {
+        x: [ini['alpha']],
+        y: [ini['beta']],
+        name: 'pose inicial',
+        mode: "markers",
+        marker: {
+            size: 8,
+            color: 'green'
+        }
+    };
+
+    var final = {
+        x: [fin['alpha']],
+        y: [fin['beta']],
+        name: 'pose final',
+        mode: "markers",
+        marker: {
+            size: 8,
+            color: 'pink'
+        }
+    };
 
     var databueno = {
         x: alphasbuenos,
@@ -179,16 +587,7 @@ function setup() {
         },
     };
 
-    var data = [{
-        x: alphasbuenos,
-        y: betasbuenos,
-        name: 'libre',
-        mode: "markers",
-        marker: {
-            size: 8,
-            color: 'blue'
-        },
-    }];
+    var data = [databueno, final, inicial];
 
     // Define Layout
     var layout = {
@@ -211,7 +610,7 @@ function setup() {
         }
     };
 
-    var plotData = [databueno, datamalo];
+    var plotData = [databueno, datamalo, inicial, final];
 
     var layout = {
         xaxis: { range: [0, 180], title: "Alpha" },
@@ -221,62 +620,48 @@ function setup() {
 
     // Display using Plotly
     Plotly.newPlot("myPlotTodos", plotData, layout);
+}
 
-    let grafo = [];
+function graficarGrafo(alphasbuenos, betasbuenos, grafo) {
+    var data = [];
+    grafo.forEach(nodo => {
 
-    nodosbuenos.forEach(nodo => {
-        let vecinos = kvecinos(nodo, nodosbuenos, k);
-        n = new Nodo(nodo['nodo'],nodo['alpha'],nodo['beta']);
-        
-        for (let i = 0; i < vecinos.length; i++) {
-            n.addAdyacente(vecinos[i].nodo,vecinos[i].distancia);    
-        }
+        let xval = [];
+        let yval = [];
+        console.log(nodo.alpha, nodo.beta, nodo.adyacentes);
+        nodo.adyacentes.forEach(n => {
+            xval.push(n.nodo.alpha);
+            yval.push(n.nodo.beta);
+        });
+        xval.push(nodo.alpha);
+        yval.push(nodo.beta);
+        data.push({
+            x: xval,
+            y: yval,
+            mode: 'lines+markers',
+            type: 'scatter',
 
-        grafo.push(n);
+        });
     });
 
-    console.log(grafo);
+    var layout = {
+        xaxis: { range: [0, 180], title: "Alpha" },
+        yaxis: { range: [0, 360], title: "Beta" },
+        title: "Grafo"
+    };
+
+    Plotly.newPlot('myDiv', data, layout);
 }
 
 
-
-function draw() {
-    background(200);
-    translate(width / 2, height);
-
-    hit = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo1.x, circulo1.y, circulo1.radio)
-        || lineCircle(brazo.getP2X(), brazo.getP2Y(), brazo.getP3X(), brazo.getP3Y(), circulo1.x, circulo1.y, circulo1.radio);
-
-
-    hit2 = lineCircle(0, 0, brazo.getP2X(), brazo.getP2Y(), circulo2.x, circulo2.y, circulo2.radio)
-        || lineCircle(brazo.getP2X(), brazo.getP2Y(), brazo.getP3X(), brazo.getP3Y(), circulo2.x, circulo2.y, circulo2.radio);
-
-
-    push();
-    brazo.dibujarBrazo();
-    pop();
-
-    // draw the circle
-    if (hit) {
-        circulo1.dibujarCirculo(255, 150, 0, 150);
-    }
-    else {
-        circulo1.dibujarCirculo(0, 150, 255, 150);
-    }
-
-    // draw the circle 2
-    if (hit2) {
-        circulo2.dibujarCirculo(255, 150, 0, 150);
-    }
-    else {
-        circulo2.dibujarCirculo(0, 150, 255, 150);
-    }
-}
-
+/**
+ * generarPuntos genera un conjunto de nodos(configuraciones alfa-beta) de manera aleatoria
+ */
 function generarPuntos() {
     let alphai;
     let betaj;
 
+    puntos = [];
     for (let i = 0; i < puntosSize; i++) {
         alphai = Math.floor((Math.random() * maxAlpha));
         betaj = Math.floor((Math.random() * maxBeta));
@@ -284,6 +669,12 @@ function generarPuntos() {
     }
 }
 
+
+/**
+ * Funcion para evaluar si un nodo ( una configuracion de alpha - beta) esta en espacio libre o si es obstaculo
+ * @param {*} node 
+ * @returns verdadero si esta en espacio libre, falso en cualquier otro caso
+ */
 function evaluateNode(node) {
     let x2 = (cos(node['alpha']) * brazo.l1);
 
@@ -303,14 +694,25 @@ function evaluateNode(node) {
     return hit || hit2;
 }
 
+
+/**
+ * kvecinos regresa una lista de nodos correspondientes a los k vecinos mas cercanos
+ * @param {Nodo} nodo 
+ * @param {list} poblacion 
+ * @param {*} k 
+ * @returns 
+ */
 function kvecinos(nodo, poblacion, k) {
     let distancias = [];
     let vecinos = [];
 
+    //Calcular la distancia entre nodo y todos los demas vertices del grafo
     for (let i = 0; i < poblacion.length; i++) {
         distancias.push({ 'distancia': dist(nodo['alpha'], nodo['beta'], poblacion[i]['alpha'], poblacion[i]['beta']), 'nodo': poblacion[i] });
     }
 
+
+    //Ordenar los vertices por distancia de manera ascendente
     distancias.sort(function (a, b) {
         return a.distancia - b.distancia;
     });
@@ -318,12 +720,15 @@ function kvecinos(nodo, poblacion, k) {
     let j = 0, i = 1;
     let puntomedio, puntocuarto1, puntocuarto2, puntoctavo1, puntoctavo2, puntoctavo3, puntoctavo4;
 
+    //Validar los nodos vecinos si no existe colision y agregarlos a vecinos
     while (j < k && i < distancias.length) {
         puntomedio = [(nodo['alpha'] + distancias[i].nodo['alpha']) / 2, (nodo['beta'] + distancias[i].nodo['beta']) / 2];
+
         puntocuarto1 = [(nodo['alpha'] + puntomedio[0]) / 2, (nodo['beta'] + puntomedio[1]) / 2];
-        puntocuarto2 = [(distancias[i].nodo['alpha'] + puntomedio[0]) / 2, (distancias[i].nodo['beta']) / 2];
+        puntocuarto2 = [(distancias[i].nodo['alpha'] + puntomedio[0]) / 2, (distancias[i].nodo['beta']) + puntomedio[1] / 2];
+
         puntoctavo1 = [(nodo['alpha'] + puntocuarto1[0]) / 2, (nodo['beta'] + puntocuarto1[1]) / 2];
-        puntoctavo2 = [(puntomedio[0] + puntocuarto1[0]) / 2, (puntomedio[0] + puntocuarto1[1]) / 2];
+        puntoctavo2 = [(puntomedio[0] + puntocuarto1[0]) / 2, (puntomedio[1] + puntocuarto1[1]) / 2];
         puntoctavo3 = [(puntomedio[0] + puntocuarto2[0]) / 2, (puntomedio[1] + puntocuarto2[1]) / 2];
         puntoctavo4 = [(puntocuarto2[0] + distancias[i].nodo['alpha']) / 2, (puntocuarto2[1] + distancias[i].nodo['beta']) / 2];
 
@@ -334,21 +739,45 @@ function kvecinos(nodo, poblacion, k) {
             !evaluateNode({ 'alpha': puntoctavo2[0], 'beta': puntoctavo2[1] }) &&
             !evaluateNode({ 'alpha': puntoctavo3[0], 'beta': puntoctavo3[1] }) &&
             !evaluateNode({ 'alpha': puntoctavo4[0], 'beta': puntoctavo4[1] })) {
-            vecinos.push({'nodo':distancias[i].nodo,'distancia':distancias[i].distancia});
+            vecinos.push({ 'nodo': distancias[i].nodo, 'distancia': distancias[i].distancia });
             i++;
             j++;
         }
         else {
-            //console.log(`nodo ${distancias[i]} no sirve, aumentando i = ${i} a ${i+1}`);
             i++;
             continue;
         }
     }
 
     if (i >= distancias.length) {
-        console.log('nodo \'encerrado\' ')
+        console.log('nodo \'encerrado\'');
     }
+
+    //Regresar los k vecinos mas cercanos
     return vecinos;
+}
+
+/**
+ * mouseDragged detecta si el cursor se encuentra encima de la pelota o no y si se ha realizado clic
+ * en caso de que sea asi, se puede arrastar el mouse sin soltar el clic para posicionar la pelota
+ */
+function mouseDragged() {
+    let x = mouseX - 400;
+    let y = -(mouseY - 800);
+
+    let dista = dist(x, y, circulo1.x, circulo1.y);
+
+    let dista2 = dist(x, y, circulo2.x, circulo2.y);
+
+    if (dista <= circulo1.radio) {
+        circulo1.x = x;
+        circulo1.y = y;
+    }
+
+    if (dista2 <= circulo2.radio) {
+        circulo2.x = x;
+        circulo2.y = y;
+    }
 }
 
 // POINT/CIRCLE
@@ -396,9 +825,9 @@ function lineCircle(x1, y1, x2, y2, cx, cy, r) {
 
     // optionally, draw a circle at the closest
     // point on the line
-    // fill(255, 0, 0);
-    // noStroke();
-    // ellipse(closestX, closestY, 20, 20);
+    //fill(255, 0, 0);
+    //noStroke();
+    //ellipse(closestX, closestY, 20, 20);
 
     // get distance to closest point
     distX = closestX - cx;
